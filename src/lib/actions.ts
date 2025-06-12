@@ -26,35 +26,67 @@ export async function sendDataToN8N(
       return { success: false, error: errorMessage };
     }
 
-    const responseBodyText = await n8nApiResponse.text(); // Read body as text
+    const responseBodyText = await n8nApiResponse.text();
     let extractedMessage: string = "";
-    let parsedDataForFields: any = null; // For fields like id, status, processedAt
+    const defaultBotMessage = "Bot: Sorry, I couldn't get a clear response from the assistant.";
+    let parsedDataForFields: any = null;
 
     try {
-      const jsonData = JSON.parse(responseBodyText);
-      parsedDataForFields = jsonData; 
+      parsedDataForFields = JSON.parse(responseBodyText);
 
-      if (jsonData && typeof jsonData.message === 'string' && jsonData.message.trim() !== '') {
-        extractedMessage = jsonData.message;
-      } else if (typeof jsonData === 'string' && jsonData.trim() !== '') { 
-        // Handles cases where N8N might return a string directly as JSON, e.g., "This is the response"
-        extractedMessage = jsonData;
-      } else if (responseBodyText.trim() !== '' && responseBodyText.trim() !== '{}' && responseBodyText.trim() !== '[]') {
-        // If it's a JSON structure but doesn't have a .message field,
-        // and the raw text itself is not just an empty JSON object or array,
-        // use the raw response text (which would be the JSON string).
-        extractedMessage = responseBodyText;
+      if (parsedDataForFields && typeof parsedDataForFields.message === 'string' && parsedDataForFields.message.trim() !== '') {
+        // Case 1: Ideal - N8N returns {"message": "response text"}
+        extractedMessage = parsedDataForFields.message;
+      } else if (typeof parsedDataForFields === 'string' && parsedDataForFields.trim() !== '') {
+        // Case 2: N8N returns "response text" (as a JSON string literal)
+        extractedMessage = parsedDataForFields;
+      } else if (typeof parsedDataForFields === 'object' && parsedDataForFields !== null && !Array.isArray(parsedDataForFields)) {
+        // Case 3: N8N returns a JSON object, not in the ideal format.
+        const keys = Object.keys(parsedDataForFields);
+        if (keys.length === 1 && typeof parsedDataForFields[keys[0]] === 'string' && (parsedDataForFields[keys[0]] as string).trim() !== '') {
+          // Heuristic: if {"someKey": "response text"}, use "response text"
+          extractedMessage = parsedDataForFields[keys[0]];
+        } else {
+          // Try to find any top-level non-empty string value as a last resort for an object.
+          let foundText = "";
+          for (const key of keys) {
+            if (typeof parsedDataForFields[key] === 'string' && (parsedDataForFields[key] as string).trim() !== '') {
+              foundText = parsedDataForFields[key] as string;
+              break; // Take the first non-empty string value found
+            }
+          }
+          if (foundText) {
+            extractedMessage = foundText;
+          } else {
+            extractedMessage = "Bot: Assistant returned structured data. Please ensure N8N workflow outputs a simple text response or a JSON with a 'message' field.";
+          }
+        }
+      } else if (typeof parsedDataForFields === 'number' || typeof parsedDataForFields === 'boolean') {
+        // Case 4: N8N returns a number or boolean as JSON (e.g. 123, true)
+        extractedMessage = String(parsedDataForFields);
+      } else if (Array.isArray(parsedDataForFields)) {
+        // Case 5: N8N returns a JSON array.
+        extractedMessage = "Bot: Assistant returned an array. Please ensure N8N workflow outputs simple text or a JSON with a 'message' field.";
+      } else if (responseBodyText.trim() === '' || responseBodyText.trim() === '{}' || responseBodyText.trim() === '[]') {
+         // Case 6: The raw response was empty or an empty JSON structure
+        extractedMessage = "Bot: Assistant gave an empty response.";
       } else {
-        // Fallback if JSON is empty or doesn't fit expected structures for a message
-        extractedMessage = "N8N processed the request but returned an empty or unformatted message.";
+        // Case 7: Fallback for other unhandled valid JSON types (e.g. null if JSON.parse('null')) or if logic missed something.
+        extractedMessage = defaultBotMessage;
       }
     } catch (e) {
-      // Not JSON, or JSON parsing failed. Use the raw text if it's not empty.
+      // Case 8: Not JSON, or JSON parsing failed. Assume plain text.
       if (responseBodyText.trim() !== '') {
         extractedMessage = responseBodyText;
       } else {
-        extractedMessage = "N8N processed the request but returned an empty response.";
+        // If parsing failed and body is empty, it's an empty response.
+        extractedMessage = "Bot: Assistant gave an empty response.";
       }
+    }
+
+    // Ensure extractedMessage is not purely whitespace, if it is after all logic, use a default.
+    if (extractedMessage.trim() === '') {
+        extractedMessage = defaultBotMessage;
     }
     
     const processedEntry: N8nWebhookResponse = {
