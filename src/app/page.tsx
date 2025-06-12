@@ -1,33 +1,43 @@
 "use client";
 
-import type { N8nWebhookResponse } from "@/types";
 import { useState } from "react";
 import { Header } from "@/components/layout/header";
 import { N8nForm } from "@/components/n8n/n8n-form";
 import { DataTable } from "@/components/n8n/data-table";
 import { AiInsights } from "@/components/n8n/ai-insights";
 import { Separator } from "@/components/ui/separator";
+import { Conversation } from "@/components/n8n/conversation"; // Import the new Conversation component
+import type { N8nWebhookResponse } from "@/types"; // Assuming this type is correct
 
 export default function HomePage() {
-  const [processedData, setProcessedData] = useState<N8nWebhookResponse[]>([]);
+ const [processedData, setProcessedData] = useState<N8nWebhookResponse[]>([]);
+ const [conversationHistory, setConversationHistory] = useState<string[]>([]); // State for conversation history
 
-  const handleDataProcessed = (newData: N8nWebhookResponse) => {
-    // Add new data to the beginning of the array and keep only the last 10 entries
-    setProcessedData((prevData) => [newData, ...prevData].slice(0, 10));
-  };
+ const handleDataProcessed = (newData: N8nWebhookResponse) => {
+ // Add new data to the beginning of the array and keep only the last 10 entries
+ setProcessedData((prevData) => [newData, ...prevData].slice(0, 10));
 
-  return (
+ // Add the new data to the conversation history
+ setConversationHistory((prevHistory) => [...prevHistory, JSON.stringify(newData, null, 2)]);
+ };
+
+ return (
     <div className="flex min-h-screen flex-col bg-background text-foreground">
       <Header />
       <main className="flex-1">
         <div className="container mx-auto py-6 px-4 sm:px-6 lg:px-8 space-y-8">
+          {/* New Conversation Section */}
+          <section aria-labelledby="conversation-section">
+            <h2 id="conversation-section" className="sr-only">N8N Conversation</h2>
+            <Conversation history={conversationHistory} />
+          </section>
+
+          <Separator className="my-8" />
+
           <section aria-labelledby="n8n-form-section">
             <h2 id="n8n-form-section" className="sr-only">N8N Data Submission Form</h2>
             <N8nForm onDataProcessed={handleDataProcessed} />
           </section>
-          
-          <Separator className="my-8" />
-          
           <section aria-labelledby="data-table-section">
             <h2 id="data-table-section" className="sr-only">Processed N8N Data Table</h2>
             <DataTable data={processedData} />
