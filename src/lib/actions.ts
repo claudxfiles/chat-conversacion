@@ -9,7 +9,7 @@ export async function sendDataToN8N(
   formData: N8nFormData
 ): Promise<{ success: boolean; data?: N8nWebhookResponse; error?: string }> {
   try {
-    const response = await fetch(N8N_WEBHOOK_URL, {
+    const n8nApiResponse = await fetch(N8N_WEBHOOK_URL, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -17,31 +17,52 @@ export async function sendDataToN8N(
       body: JSON.stringify(formData),
     });
 
-    if (!response.ok) {
-      // Try to parse error message from N8N if available
-      let errorMessage = `N8N webhook request failed with status: ${response.status}`;
+    if (!n8nApiResponse.ok) {
+      let errorMessage = `N8N webhook request failed with status: ${n8nApiResponse.status}`;
       try {
-        const errorData = await response.json();
+        const errorData = await n8nApiResponse.json();
         errorMessage = errorData.message || errorData.error || errorMessage;
-      } catch (e) {
-        // Ignore if response is not JSON
-      }
+      } catch (e) { /* Ignore if error response is not JSON */ }
       return { success: false, error: errorMessage };
     }
 
-    let responseData;
+    const responseBodyText = await n8nApiResponse.text(); // Read body as text
+    let extractedMessage: string = "";
+    let parsedDataForFields: any = null; // For fields like id, status, processedAt
+
     try {
-      responseData = await response.json();
+      const jsonData = JSON.parse(responseBodyText);
+      parsedDataForFields = jsonData; 
+
+      if (jsonData && typeof jsonData.message === 'string' && jsonData.message.trim() !== '') {
+        extractedMessage = jsonData.message;
+      } else if (typeof jsonData === 'string' && jsonData.trim() !== '') { 
+        // Handles cases where N8N might return a string directly as JSON, e.g., "This is the response"
+        extractedMessage = jsonData;
+      } else if (responseBodyText.trim() !== '' && responseBodyText.trim() !== '{}' && responseBodyText.trim() !== '[]') {
+        // If it's a JSON structure but doesn't have a .message field,
+        // and the raw text itself is not just an empty JSON object or array,
+        // use the raw response text (which would be the JSON string).
+        extractedMessage = responseBodyText;
+      } else {
+        // Fallback if JSON is empty or doesn't fit expected structures for a message
+        extractedMessage = "N8N processed the request but returned an empty or unformatted message.";
+      }
     } catch (e) {
-      responseData = null;
+      // Not JSON, or JSON parsing failed. Use the raw text if it's not empty.
+      if (responseBodyText.trim() !== '') {
+        extractedMessage = responseBodyText;
+      } else {
+        extractedMessage = "N8N processed the request but returned an empty response.";
+      }
     }
     
     const processedEntry: N8nWebhookResponse = {
-      id: responseData?.id || crypto.randomUUID(),
+      id: (parsedDataForFields?.id as string) || crypto.randomUUID(),
       receivedData: formData,
-      status: responseData?.status || "Processed",
-      processedAt: responseData?.processedAt || new Date().toISOString(),
-      message: responseData?.message || "Data successfully sent to N8N.",
+      status: (parsedDataForFields?.status as N8nWebhookResponse["status"]) || "Processed",
+      processedAt: (parsedDataForFields?.processedAt as string) || new Date().toISOString(),
+      message: extractedMessage,
     };
 
     return { success: true, data: processedEntry };

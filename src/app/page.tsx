@@ -23,8 +23,6 @@ export default function HomePage() {
       const currentMessage = message;
       setMessage(""); // Clear input immediately
 
-      // For the conversational interface, send only the essential message.
-      // The N8N agent in the diagram seems to be a pure conversational agent.
       const formData: N8nFormData = {
         taskDescription: currentMessage, 
       };
@@ -33,8 +31,7 @@ export default function HomePage() {
         const response = await sendDataToN8N(formData);
 
         if (response.success && response.data) {
-          // Expecting N8N to return the AI's reply in the 'message' field
-          const botResponseText = response.data.message || (typeof response.data === 'string' ? response.data : 'Processed your message.');
+          const botResponseText = response.data.message || "Bot: Sorry, I couldn't get a response.";
           const botMessage = `Bot: ${botResponseText}`;
           setConversationHistory(prevHistory => [...prevHistory, botMessage]);
         } else {
@@ -47,7 +44,7 @@ export default function HomePage() {
         setConversationHistory(prevHistory => [...prevHistory, errorMessage]);
       }
       
-      inputRef.current?.focus(); // Refocus input after sending
+      inputRef.current?.focus(); 
     }
   };
 
