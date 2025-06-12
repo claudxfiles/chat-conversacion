@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { sendDataToN8N } from "@/lib/actions";
 import { Header } from "@/components/layout/header";
 import { Send } from "lucide-react";
+import type { N8nFormData } from "@/types";
 
 export default function HomePage() {
   const [conversationHistory, setConversationHistory] = useState<string[]>([]);
@@ -22,20 +23,18 @@ export default function HomePage() {
       const currentMessage = message;
       setMessage(""); // Clear input immediately
 
-      const formData = {
-        // For this conversational interface, we might not need all fields like agentName or priority
-        // Or we can use a default agentName
-        agentName: "WebAppUser", 
-        taskDescription: currentMessage, // Send the user's message as taskDescription
-        priority: "medium" as const, // Default priority or make it configurable if needed
+      // For the conversational interface, send only the essential message.
+      // The N8N agent in the diagram seems to be a pure conversational agent.
+      const formData: N8nFormData = {
+        taskDescription: currentMessage, 
       };
 
       try {
         const response = await sendDataToN8N(formData);
 
         if (response.success && response.data) {
-          // Use the message from N8N response, or a default "Processed"
-          const botResponseText = response.data.message || (typeof response.data === 'string' ? response.data : 'Processed');
+          // Expecting N8N to return the AI's reply in the 'message' field
+          const botResponseText = response.data.message || (typeof response.data === 'string' ? response.data : 'Processed your message.');
           const botMessage = `Bot: ${botResponseText}`;
           setConversationHistory(prevHistory => [...prevHistory, botMessage]);
         } else {
