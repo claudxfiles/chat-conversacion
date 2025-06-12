@@ -4,13 +4,15 @@
 import * as React from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Bot, User, MessageSquareDashed } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Bot, User, MessageSquareDashed, RefreshCw } from "lucide-react";
 
 type ConversationProps = {
   history: string[];
+  onNewChat: () => void;
 };
 
-export function Conversation({ history }: ConversationProps) {
+export function Conversation({ history, onNewChat }: ConversationProps) {
   const scrollAreaRef = React.useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
@@ -24,14 +26,19 @@ export function Conversation({ history }: ConversationProps) {
 
   return (
     <Card className="shadow-lg w-full flex-grow flex flex-col">
-      <CardHeader>
-        <CardTitle className="font-headline text-2xl flex items-center">
-          <Bot className="mr-3 h-7 w-7 text-primary" />
-          N8N Interaction Log
-        </CardTitle>
-        <CardDescription>
-          A log of data submissions and N8N responses.
-        </CardDescription>
+      <CardHeader className="flex flex-row items-center justify-between">
+        <div className="space-y-1.5">
+          <CardTitle className="font-headline text-2xl flex items-center">
+            <Bot className="mr-3 h-7 w-7 text-primary" />
+            N8N Interaction Log
+          </CardTitle>
+          <CardDescription>
+            A log of data submissions and N8N responses.
+          </CardDescription>
+        </div>
+        <Button variant="outline" size="icon" onClick={onNewChat} aria-label="Start new chat">
+          <RefreshCw size={18} />
+        </Button>
       </CardHeader>
       <CardContent className="flex-grow flex flex-col overflow-hidden">
         {history.length === 0 ? (
