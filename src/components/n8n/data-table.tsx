@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import type { N8nWebhookResponse } from "@/types";
 import {
   Table,
@@ -12,7 +13,7 @@ import {
 } from "@/components/ui/table";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { Button } from "@/components/ui/button";
 import { AlertCircle, CheckCircle2, Clock } from "lucide-react";
 
 type DataTableProps = {
@@ -46,11 +47,25 @@ function StatusIcon({ status }: { status: N8nWebhookResponse["status"] }) {
 }
 
 export function DataTable({ data }: DataTableProps) {
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  const totalPages = Math.ceil(data.length / itemsPerPage);
+
+  const paginatedData = data.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+  const handlePreviousPage = () => {
+    setCurrentPage((prev) => Math.max(prev - 1, 1));
+  };
+
+  const handleNextPage = () => {
+    setCurrentPage((prev) => Math.min(prev + 1, totalPages));
+  };
+
   return (
     <Card className="shadow-lg">
       <CardHeader>
         <CardTitle className="font-headline text-2xl">N8N Processed Data</CardTitle>
-        <CardDescription>View the data processed by your N8N workflows. Shows last 10 entries.</CardDescription>
+        <CardDescription>View the data processed by your N8N workflows.</CardDescription>
       </CardHeader>
       <CardContent>
         {data.length === 0 ? (
@@ -60,41 +75,58 @@ export function DataTable({ data }: DataTableProps) {
             <p className="text-sm text-muted-foreground">Submit data using the form above to see results here.</p>
           </div>
         ) : (
-          <ScrollArea className="h-[400px] w-full rounded-md border">
-            <Table>
-              <TableCaption>A list of recently processed N8N data entries.</TableCaption>
-              <TableHeader className="sticky top-0 bg-background/90 backdrop-blur-sm">
-                <TableRow>
-                  <TableHead className="w-[150px]">Agent Name</TableHead>
-                  <TableHead>Task Description</TableHead>
-                  <TableHead className="w-[100px] text-center">Priority</TableHead>
-                  <TableHead className="w-[120px] text-center">Status</TableHead>
-                  <TableHead className="w-[180px] text-right">Processed At</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {data.map((item) => (
-                  <TableRow key={item.id} className="hover:bg-muted/50 transition-colors">
-                    <TableCell className="font-medium">{item.receivedData.agentName}</TableCell>
-                    <TableCell className="max-w-xs truncate" title={item.receivedData.taskDescription}>
-                      {item.receivedData.taskDescription}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <PriorityBadge priority={item.receivedData.priority} />
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <div className="flex items-center justify-center" title={item.status}>
-                        <StatusIcon status={item.status} />
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-right font-mono text-xs">
-                      {new Date(item.processedAt).toLocaleString()}
-                    </TableCell>
+          <>
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader className="sticky top-0 bg-background/90 backdrop-blur-sm">
+                  <TableRow>
+                    <TableHead className="w-[150px]">Agent Name</TableHead>
+                    <TableHead>Task Description</TableHead>
+                    <TableHead className="w-[100px] text-center">Priority</TableHead>
+                    <TableHead className="w-[120px] text-center">Status</TableHead>
+                    <TableHead className="w-[180px] text-right">Processed At</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </ScrollArea>
+                </TableHeader>
+                <TableBody>
+                  {paginatedData.map((item) => (
+                    <TableRow key={item.id} className="hover:bg-muted/50 transition-colors">
+                      <TableCell className="font-medium">{item.receivedData.agentName}</TableCell>
+                      <TableCell className="max-w-xs truncate" title={item.receivedData.taskDescription}>
+                        {item.receivedData.taskDescription}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <PriorityBadge priority={item.receivedData.priority} />
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <div className="flex items-center justify-center" title={item.status}>
+                          <StatusIcon status={item.status} />
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right font-mono text-xs">
+                        {new Date(item.processedAt).toLocaleString()}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+            <div className="flex items-center justify-between mt-4">
+              <TableCaption className="text-sm text-muted-foreground">
+                Showing {paginatedData.length} of {data.length} entries.
+              </TableCaption>
+              <div className="flex items-center space-x-2">
+                <Button variant="outline" size="sm" onClick={handlePreviousPage} disabled={currentPage === 1}>
+                  Previous
+                </Button>
+                <span className="text-sm font-medium">
+                  Page {currentPage} of {totalPages}
+                </span>
+                <Button variant="outline" size="sm" onClick={handleNextPage} disabled={currentPage === totalPages}>
+                  Next
+                </Button>
+              </div>
+            </div>
+          </>
         )}
       </CardContent>
     </Card>

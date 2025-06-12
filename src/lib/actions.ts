@@ -3,7 +3,7 @@
 
 import type { N8nFormData, N8nWebhookResponse, AiSuggestion } from "@/types";
 
-const N8N_WEBHOOK_URL = "https://devwebhook.draenor.shop/webhook/6a02af6d-3725-48c9-8b4e-287bd706dd56";
+const N8N_WEBHOOK_URL = "https://devn8n.draenor.shop/webhook-test/input";
 
 export async function sendDataToN8N(
   formData: N8nFormData
@@ -29,18 +29,15 @@ export async function sendDataToN8N(
       return { success: false, error: errorMessage };
     }
 
-    // Assuming N8N might return the processed data or a confirmation
-    // For this example, we'll construct a mock response if N8N returns simple success (e.g. 200 OK with no body or simple message)
     let responseData;
     try {
       responseData = await response.json();
     } catch (e) {
-      // If N8N returns no JSON body or non-JSON, create a mock success response
       responseData = null;
     }
     
     const processedEntry: N8nWebhookResponse = {
-      id: responseData?.id || crypto.randomUUID(), // Use ID from N8N if available, else generate one
+      id: responseData?.id || crypto.randomUUID(),
       receivedData: formData,
       status: responseData?.status || "Processed",
       processedAt: responseData?.processedAt || new Date().toISOString(),
@@ -63,7 +60,6 @@ export async function getAiWorkflowSuggestions(
   data: N8nWebhookResponse[]
 ): Promise<{ success: boolean; suggestions?: AiSuggestion[]; error?: string }> {
   // In a real app, this would call your Genkit flow
-  // For now, simulate a delay and return mock suggestions
   await new Promise(resolve => setTimeout(resolve, 1500));
 
   if (data.length === 0) {

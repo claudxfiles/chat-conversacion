@@ -1,59 +1,86 @@
+
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
+import { Conversation } from "@/components/n8n/conversation";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { sendDataToN8N } from "@/lib/actions";
 import { Header } from "@/components/layout/header";
-import { N8nForm } from "@/components/n8n/n8n-form";
-import { DataTable } from "@/components/n8n/data-table";
-import { AiInsights } from "@/components/n8n/ai-insights";
-import { Separator } from "@/components/ui/separator";
-import { Conversation } from "@/components/n8n/conversation"; // Import the new Conversation component
-import type { N8nWebhookResponse } from "@/types"; // Assuming this type is correct
+import { Send } from "lucide-react";
 
 export default function HomePage() {
- const [processedData, setProcessedData] = useState<N8nWebhookResponse[]>([]);
- const [conversationHistory, setConversationHistory] = useState<string[]>([]); // State for conversation history
+  const [conversationHistory, setConversationHistory] = useState<string[]>([]);
+  const [message, setMessage] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
 
- const handleDataProcessed = (newData: N8nWebhookResponse) => {
- // Add new data to the beginning of the array and keep only the last 10 entries
- setProcessedData((prevData) => [newData, ...prevData].slice(0, 10));
+  const handleSendMessage = async () => {
+    if (message.trim() !== "") {
+      const userMessage = `User: ${message}`;
+      setConversationHistory(prevHistory => [...prevHistory, userMessage]);
+      
+      const currentMessage = message;
+      setMessage(""); // Clear input immediately
 
- // Add the new data to the conversation history
- setConversationHistory((prevHistory) => [...prevHistory, JSON.stringify(newData, null, 2)]);
- };
+      const formData = {
+        // For this conversational interface, we might not need all fields like agentName or priority
+        // Or we can use a default agentName
+        agentName: "WebAppUser", 
+        taskDescription: currentMessage, // Send the user's message as taskDescription
+        priority: "medium" as const, // Default priority or make it configurable if needed
+      };
 
- return (
-    <div className="flex min-h-screen flex-col bg-background text-foreground">
+      try {
+        const response = await sendDataToN8N(formData);
+
+        if (response.success && response.data) {
+          // Use the message from N8N response, or a default "Processed"
+          const botResponseText = response.data.message || (typeof response.data === 'string' ? response.data : 'Processed');
+          const botMessage = `Bot: ${botResponseText}`;
+          setConversationHistory(prevHistory => [...prevHistory, botMessage]);
+        } else {
+          const errorMessageText = response.error || 'An unknown error occurred processing your request.';
+          const errorMessage = `Bot: Error - ${errorMessageText}`;
+          setConversationHistory(prevHistory => [...prevHistory, errorMessage]);
+        }
+      } catch (error) {
+        const errorMessage = `Bot: Error - Could not connect to the service.`;
+        setConversationHistory(prevHistory => [...prevHistory, errorMessage]);
+      }
+      
+      inputRef.current?.focus(); // Refocus input after sending
+    }
+  };
+
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, []);
+
+  return (
+    <div className="h-screen w-screen bg-background flex flex-col">
       <Header />
-      <main className="flex-1">
-        <div className="container mx-auto py-6 px-4 sm:px-6 lg:px-8 space-y-8">
-          {/* New Conversation Section */}
-          <section aria-labelledby="conversation-section">
-            <h2 id="conversation-section" className="sr-only">N8N Conversation</h2>
-            <Conversation history={conversationHistory} />
-          </section>
-
-          <Separator className="my-8" />
-
-          <section aria-labelledby="n8n-form-section">
-            <h2 id="n8n-form-section" className="sr-only">N8N Data Submission Form</h2>
-            <N8nForm onDataProcessed={handleDataProcessed} />
-          </section>
-          <section aria-labelledby="data-table-section">
-            <h2 id="data-table-section" className="sr-only">Processed N8N Data Table</h2>
-            <DataTable data={processedData} />
-          </section>
-          
-          <Separator className="my-8" />
-          
-          <section aria-labelledby="ai-insights-section">
-            <h2 id="ai-insights-section" className="sr-only">AI Workflow Insights</h2>
-            <AiInsights dataForAnalysis={processedData} />
-          </section>
+      <main className="flex-grow flex flex-col p-4 md:p-6 lg:p-8 overflow-hidden space-y-4">
+        <Conversation history={conversationHistory} />
+        <div className="mt-auto flex items-center space-x-2 pb-2">
+          <Input
+            ref={inputRef}
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            onKeyPress={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                handleSendMessage();
+              }
+            }}
+            placeholder="Type your message..."
+            className="flex-grow h-12 text-base"
+          />
+          <Button onClick={handleSendMessage} className="h-12 px-6" aria-label="Send message">
+            <Send size={20} />
+            <span className="ml-2 hidden sm:inline">Send</span>
+          </Button>
         </div>
       </main>
-      <footer className="py-8 text-center text-sm text-muted-foreground border-t">
-        N8N Firebase Interface © {new Date().getFullYear()}
-      </footer>
     </div>
-  );
+  )
 }
