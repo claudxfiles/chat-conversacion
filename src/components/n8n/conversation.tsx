@@ -14,17 +14,20 @@ type ConversationProps = {
 
 export function Conversation({ history, onNewChat }: ConversationProps) {
   const scrollAreaRef = React.useRef<HTMLDivElement>(null);
-  const viewportRef = React.useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
-    if (viewportRef.current) {
-      viewportRef.current.scrollTop = viewportRef.current.scrollHeight;
+    if (scrollAreaRef.current) {
+      // The ScrollAreaPrimitive.Viewport is typically the first child of the ScrollAreaPrimitive.Root
+      const viewport = scrollAreaRef.current.firstElementChild as HTMLElement | null;
+      if (viewport) {
+        viewport.scrollTop = viewport.scrollHeight;
+      }
     }
   }, [history]);
 
   return (
-    <Card className="shadow-lg w-full flex-grow flex flex-col">
-      <CardHeader className="flex flex-row items-center justify-between">
+    <Card className="shadow-lg w-full flex-grow flex flex-col overflow-hidden">
+      <CardHeader className="flex flex-row items-center justify-between shrink-0">
         <div className="space-y-1.5">
           <CardTitle className="font-headline text-2xl flex items-center">
             <Bot className="mr-3 h-7 w-7 text-primary" />
@@ -38,17 +41,16 @@ export function Conversation({ history, onNewChat }: ConversationProps) {
           <RefreshCw size={18} />
         </Button>
       </CardHeader>
-      <CardContent className="flex-grow flex flex-col min-h-0"> {/* Changed: removed overflow-hidden, added min-h-0 */}
+      <CardContent className="flex-1 min-h-0 p-0">
         {history.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground">
+          <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground p-4">
             <MessageSquareDashed className="h-12 w-12 mb-3 text-muted-foreground" />
             <p>No interactions yet.</p>
             <p className="text-sm">Submit data through the form to see the log.</p>
           </div>
         ) : (
-          <ScrollArea className="flex-1" ref={scrollAreaRef}> {/* Changed: h-full flex-grow to flex-1 */}
-             {/* Assign ref to viewport directly if possible, or adjust selector if ScrollArea nests it deeper under its own ref */}
-            <div className="space-y-4 p-4" ref={viewportRef}> {/* Added direct ref to inner div for simpler scroll control, assuming ScrollArea passes it */}
+          <ScrollArea className="h-full w-full" ref={scrollAreaRef}>
+            <div className="space-y-4 p-4">
               {history.map((entry, index) => {
                 const isUserMessage = entry.toLowerCase().startsWith("user:");
                 const isBotMessage = entry.toLowerCase().startsWith("bot:");
@@ -110,4 +112,3 @@ export function Conversation({ history, onNewChat }: ConversationProps) {
     </Card>
   );
 }
-

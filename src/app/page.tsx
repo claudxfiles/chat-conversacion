@@ -61,9 +61,9 @@ export default function HomePage() {
   return (
     <div className="h-screen w-screen bg-background flex flex-col">
       <Header />
-      <main className="flex-grow flex flex-col p-4 md:p-6 lg:p-8 overflow-hidden space-y-4">
+      <main className="flex-grow flex flex-col p-4 md:p-6 lg:p-8 overflow-hidden space-y-4 min-h-0">
         <Conversation history={conversationHistory} onNewChat={handleNewChat} />
-        <div className="mt-auto flex items-center space-x-2 pb-2">
+        <div className="mt-auto flex items-center space-x-2 pb-2 shrink-0">
           <Input
             ref={inputRef}
             value={message}
