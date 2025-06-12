@@ -14,13 +14,11 @@ type ConversationProps = {
 
 export function Conversation({ history, onNewChat }: ConversationProps) {
   const scrollAreaRef = React.useRef<HTMLDivElement>(null);
+  const viewportRef = React.useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
-    if (scrollAreaRef.current) {
-      const viewport = scrollAreaRef.current.querySelector('div[data-radix-scroll-area-viewport]');
-      if (viewport) {
-        viewport.scrollTop = viewport.scrollHeight;
-      }
+    if (viewportRef.current) {
+      viewportRef.current.scrollTop = viewportRef.current.scrollHeight;
     }
   }, [history]);
 
@@ -40,7 +38,7 @@ export function Conversation({ history, onNewChat }: ConversationProps) {
           <RefreshCw size={18} />
         </Button>
       </CardHeader>
-      <CardContent className="flex-grow flex flex-col overflow-hidden">
+      <CardContent className="flex-grow flex flex-col min-h-0"> {/* Changed: removed overflow-hidden, added min-h-0 */}
         {history.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground">
             <MessageSquareDashed className="h-12 w-12 mb-3 text-muted-foreground" />
@@ -48,8 +46,9 @@ export function Conversation({ history, onNewChat }: ConversationProps) {
             <p className="text-sm">Submit data through the form to see the log.</p>
           </div>
         ) : (
-          <ScrollArea className="h-full flex-grow" ref={scrollAreaRef}>
-            <div className="space-y-4 p-4">
+          <ScrollArea className="flex-1" ref={scrollAreaRef}> {/* Changed: h-full flex-grow to flex-1 */}
+             {/* Assign ref to viewport directly if possible, or adjust selector if ScrollArea nests it deeper under its own ref */}
+            <div className="space-y-4 p-4" ref={viewportRef}> {/* Added direct ref to inner div for simpler scroll control, assuming ScrollArea passes it */}
               {history.map((entry, index) => {
                 const isUserMessage = entry.toLowerCase().startsWith("user:");
                 const isBotMessage = entry.toLowerCase().startsWith("bot:");
@@ -111,3 +110,4 @@ export function Conversation({ history, onNewChat }: ConversationProps) {
     </Card>
   );
 }
+
