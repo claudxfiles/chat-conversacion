@@ -1,6 +1,7 @@
+
 "use server";
 
-import type { N8nFormData, N8nWebhookResponse } from "@/types";
+import type { N8nFormData, N8nWebhookResponse, AiSuggestion } from "@/types";
 
 const N8N_WEBHOOK_URL = "https://devwebhook.draenor.shop/webhook/6a02af6d-3725-48c9-8b4e-287bd706dd56";
 
@@ -60,7 +61,7 @@ export async function sendDataToN8N(
 // Placeholder for AI analysis function
 export async function getAiWorkflowSuggestions(
   data: N8nWebhookResponse[]
-): Promise<{ success: boolean; suggestions?: any[]; error?: string }> {
+): Promise<{ success: boolean; suggestions?: AiSuggestion[]; error?: string }> {
   // In a real app, this would call your Genkit flow
   // For now, simulate a delay and return mock suggestions
   await new Promise(resolve => setTimeout(resolve, 1500));
@@ -69,7 +70,7 @@ export async function getAiWorkflowSuggestions(
     return { success: true, suggestions: [] };
   }
   
-  const mockSuggestions = [
+  const mockSuggestions: AiSuggestion[] = [
     { id: "s1", title: "Automate High-Priority Task Routing", description: "Consider creating a dedicated N8N workflow to automatically route tasks marked as 'high' priority to senior agents or a specialized queue.", category: "Automation" },
     { id: "s2", title: "Standardize Task Descriptions", description: "Encourage agents to use consistent templates for task descriptions to improve data quality and enable better automated processing.", category: "Optimization" },
     { id: "s3", title: "Batch Low-Priority Updates", description: "For 'low' priority tasks involving system updates, explore batching them to run during off-peak hours to reduce system load.", category: "Efficiency" },
