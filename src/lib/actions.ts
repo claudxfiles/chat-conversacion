@@ -3,7 +3,7 @@
 
 import type { N8nFormData, N8nWebhookResponse, AiSuggestion } from "@/types";
 
-const N8N_WEBHOOK_URL = "https://devn8n.draenor.shop/webhook-test/input";
+const N8N_WEBHOOK_URL = "https://devwebhook.draenor.shop/webhook/input";
 
 export async function sendDataToN8N(
   formData: N8nFormData
@@ -74,3 +74,4 @@ export async function getAiWorkflowSuggestions(
   
   return { success: true, suggestions: mockSuggestions.slice(0, Math.min(mockSuggestions.length, data.length)) };
 }
+
