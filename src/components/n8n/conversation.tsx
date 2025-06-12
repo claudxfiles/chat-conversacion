@@ -7,6 +7,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Bot, User, MessageSquareDashed, RefreshCw } from "lucide-react";
 import ReactMarkdown from 'react-markdown';
+import { cn } from "@/lib/utils"; // Import cn utility
 
 type ConversationProps = {
   history: string[];
@@ -18,6 +19,7 @@ export function Conversation({ history, onNewChat }: ConversationProps) {
 
   React.useEffect(() => {
     if (scrollAreaRef.current) {
+      // Get the viewport element, which is the direct child of the ScrollArea root
       const viewport = scrollAreaRef.current.firstElementChild as HTMLElement | null;
       if (viewport) {
         viewport.scrollTop = viewport.scrollHeight;
@@ -41,7 +43,7 @@ export function Conversation({ history, onNewChat }: ConversationProps) {
           <RefreshCw size={18} />
         </Button>
       </CardHeader>
-      <CardContent className="flex-1 min-h-0 p-0">
+      <CardContent className="flex-1 min-h-0 p-0"> {/* Ensure CardContent can shrink and expand */}
         {history.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground p-4">
             <MessageSquareDashed className="h-12 w-12 mb-3 text-muted-foreground" />
@@ -50,7 +52,7 @@ export function Conversation({ history, onNewChat }: ConversationProps) {
           </div>
         ) : (
           <ScrollArea className="h-full w-full" ref={scrollAreaRef}>
-            <div className="space-y-4 p-4">
+            <div className="space-y-4 p-4"> {/* Add padding here instead of CardContent */}
               {history.map((entry, index) => {
                 const isUserMessage = entry.toLowerCase().startsWith("user:");
                 const isBotMessage = entry.toLowerCase().startsWith("bot:");
@@ -90,20 +92,29 @@ export function Conversation({ history, onNewChat }: ConversationProps) {
                               h2: ({node, ...props}) => <h2 className="text-lg font-semibold my-1.5" {...props} />,
                               h3: ({node, ...props}) => <h3 className="text-base font-semibold my-1" {...props} />,
                               p: ({node, ...props}) => <p className="mb-2 last:mb-0" {...props} />,
-                              ul: ({node, ...props}) => <ul className="list-disc list-inside space-y-1 my-2 pl-2" {...props} />,
-                              ol: ({node, ...props}) => <ol className="list-decimal list-inside space-y-1 my-2 pl-2" {...props} />,
+                              ul: ({node, ...props}) => <ul className="list-disc list-outside pl-5 space-y-1 my-2" {...props} />,
+                              ol: ({node, ...props}) => <ol className="list-decimal list-outside pl-5 space-y-1 my-2" {...props} />,
                               li: ({node, ...props}) => <li className="leading-snug" {...props} />,
                               a: ({node, ...props}) => <a className="underline hover:opacity-80" {...props} />,
                               code: ({node, inline, className, children, ...props}) => {
                                 const match = /language-(\w+)/.exec(className || '');
                                 return !inline ? (
-                                  <pre className="bg-black/20 p-2 rounded-md my-2 text-xs overflow-x-auto font-code">
-                                    <code className={className} {...props}>
+                                  <pre
+                                    className={cn(
+                                      "bg-black/10 p-3 my-2 rounded-md overflow-x-auto font-code text-sm border border-white/20"
+                                    )}
+                                  >
+                                    <code className={cn("text-primary-foreground", className)} {...props}>
                                       {children}
                                     </code>
                                   </pre>
                                 ) : (
-                                  <code className="bg-black/20 px-1 py-0.5 rounded text-xs font-code" {...props}>
+                                  <code
+                                    className={cn(
+                                      "bg-black/10 px-1.5 py-0.5 mx-0.5 rounded font-code text-sm text-primary-foreground"
+                                    )}
+                                    {...props}
+                                  >
                                     {children}
                                   </code>
                                 );
