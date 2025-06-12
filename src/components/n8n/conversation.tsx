@@ -88,13 +88,14 @@ export function Conversation({ history, onNewChat }: ConversationProps) {
                         <div className="text-sm font-body">
                           <ReactMarkdown
                             components={{
-                              h1: ({node, ...props}) => <h1 className="text-xl font-semibold my-2" {...props} />,
-                              h2: ({node, ...props}) => <h2 className="text-lg font-semibold my-1.5" {...props} />,
-                              h3: ({node, ...props}) => <h3 className="text-base font-semibold my-1" {...props} />,
-                              p: ({node, ...props}) => <p className="mb-2 last:mb-0" {...props} />,
-                              ul: ({node, ...props}) => <ul className="list-disc list-outside pl-5 space-y-1 my-2" {...props} />,
-                              ol: ({node, ...props}) => <ol className="list-decimal list-outside pl-5 space-y-1 my-2" {...props} />,
-                              li: ({node, ...props}) => <li className="leading-snug" {...props} />,
+                              h1: ({node, ...props}) => <h1 className="text-2xl font-bold my-4" {...props} />,
+                              h2: ({node, ...props}) => <h2 className="text-xl font-bold my-3" {...props} />,
+                              h3: ({node, ...props}) => <h3 className="text-lg font-semibold my-2 pt-1" {...props} />,
+                              h4: ({node, ...props}) => <h4 className="text-base font-semibold my-1.5" {...props} />,
+                              p: ({node, ...props}) => <p className="leading-relaxed mb-1.5 last:mb-0" {...props} />,
+                              ul: ({node, ...props}) => <ul className="list-disc list-outside pl-5 my-2 space-y-1.5" {...props} />,
+                              ol: ({node, ...props}) => <ol className="list-decimal list-outside pl-5 my-2 space-y-1.5" {...props} />,
+                              li: ({node, ...props}) => <li className="leading-relaxed" {...props} />,
                               a: ({node, ...props}) => <a className="underline hover:opacity-80" {...props} />,
                               code: ({node, inline, className, children, ...props}) => {
                                 const match = /language-(\w+)/.exec(className || '');
