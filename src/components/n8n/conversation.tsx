@@ -7,10 +7,17 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Bot, User, MessageSquareDashed, RefreshCw } from "lucide-react";
 import ReactMarkdown from 'react-markdown';
-import { cn } from "@/lib/utils"; // Import cn utility
+import { cn } from "@/lib/utils";
+import Image from "next/image";
+
+type ConversationEntry = {
+  type: 'user' | 'bot' | 'system';
+  content: string;
+  image?: string; // Data URI for user images
+};
 
 type ConversationProps = {
-  history: string[];
+  history: ConversationEntry[];
   onNewChat: () => void;
 };
 
@@ -19,7 +26,6 @@ export function Conversation({ history, onNewChat }: ConversationProps) {
 
   React.useEffect(() => {
     if (scrollAreaRef.current) {
-      // Get the viewport element, which is the direct child of the ScrollArea root
       const viewport = scrollAreaRef.current.firstElementChild as HTMLElement | null;
       if (viewport) {
         viewport.scrollTop = viewport.scrollHeight;
@@ -43,7 +49,7 @@ export function Conversation({ history, onNewChat }: ConversationProps) {
           <RefreshCw size={18} />
         </Button>
       </CardHeader>
-      <CardContent className="flex-1 min-h-0 p-0"> {/* Ensure CardContent can shrink and expand */}
+      <CardContent className="flex-1 min-h-0 p-0">
         {history.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground p-4">
             <MessageSquareDashed className="h-12 w-12 mb-3 text-muted-foreground" />
@@ -52,36 +58,25 @@ export function Conversation({ history, onNewChat }: ConversationProps) {
           </div>
         ) : (
           <ScrollArea className="h-full w-full" ref={scrollAreaRef}>
-            <div className="space-y-4 p-4"> {/* Add padding here instead of CardContent */}
+            <div className="space-y-4 p-4">
               {history.map((entry, index) => {
-                const isUserMessage = entry.toLowerCase().startsWith("user:");
-                const isBotMessage = entry.toLowerCase().startsWith("bot:");
-                
-                let speaker = "";
-                let messageContent = entry;
-
-                if (isUserMessage) {
-                  speaker = "User";
-                  messageContent = entry.substring("User:".length).trim();
-                } else if (isBotMessage) {
-                  speaker = "Bot";
-                  messageContent = entry.substring("Bot:".length).trim();
-                }
-
-                if (speaker === "User") {
+                if (entry.type === "user") {
                   return (
                     <div key={index} className="flex items-end space-x-3 justify-start">
                       <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground flex-shrink-0">
                         <User size={18} />
                       </span>
                       <div className="p-3 rounded-lg rounded-bl-none bg-muted shadow max-w-[75%]">
+                        {entry.image && (
+                           <Image src={entry.image} alt="User attachment" width={200} height={200} className="rounded-md mb-2 object-contain max-h-60" />
+                        )}
                         <pre className="whitespace-pre-wrap text-sm font-body text-foreground">
-                          {messageContent}
+                          {entry.content}
                         </pre>
                       </div>
                     </div>
                   );
-                } else if (speaker === "Bot") {
+                } else if (entry.type === "bot") {
                   return (
                     <div key={index} className="flex items-end space-x-3 justify-end">
                       <div className="p-3 rounded-lg rounded-br-none bg-primary text-primary-foreground shadow max-w-[75%]">
@@ -93,16 +88,17 @@ export function Conversation({ history, onNewChat }: ConversationProps) {
                               h3: ({node, ...props}) => <h3 className="text-lg font-semibold my-2 pt-1" {...props} />,
                               h4: ({node, ...props}) => <h4 className="text-base font-semibold my-1.5" {...props} />,
                               p: ({node, ...props}) => <p className="leading-relaxed mb-1.5 last:mb-0" {...props} />,
-                              ul: ({node, ...props}) => <ul className="list-disc list-outside pl-5 my-2 space-y-1.5" {...props} />,
-                              ol: ({node, ...props}) => <ol className="list-decimal list-outside pl-5 my-2 space-y-1.5" {...props} />,
-                              li: ({node, ...props}) => <li className="leading-relaxed" {...props} />,
-                              a: ({node, ...props}) => <a className="underline hover:opacity-80" {...props} />,
+                              ul: ({node, ...props}) => <ul className="list-disc list-outside pl-6 my-2 space-y-1" {...props} />,
+                              ol: ({node, ...props}) => <ol className="list-decimal list-outside pl-6 my-2 space-y-1" {...props} />,
+                              li: ({node, ...props}) => <li className="leading-relaxed mb-0.5" {...props} />,
+                              a: ({node, ...props}) => <a className="underline hover:opacity-80" target="_blank" rel="noopener noreferrer" {...props} />,
                               code: ({node, inline, className, children, ...props}) => {
                                 const match = /language-(\w+)/.exec(className || '');
                                 return !inline ? (
                                   <pre
                                     className={cn(
-                                      "bg-black/10 p-3 my-2 rounded-md overflow-x-auto font-code text-sm border border-white/20"
+                                      "bg-black/20 p-3 my-2 rounded-md overflow-x-auto font-code text-sm border border-white/20" ,
+                                      "text-primary-foreground"
                                     )}
                                   >
                                     <code className={cn("text-primary-foreground", className)} {...props}>
@@ -112,7 +108,8 @@ export function Conversation({ history, onNewChat }: ConversationProps) {
                                 ) : (
                                   <code
                                     className={cn(
-                                      "bg-black/10 px-1.5 py-0.5 mx-0.5 rounded font-code text-sm text-primary-foreground"
+                                      "bg-black/20 px-1.5 py-0.5 mx-0.5 rounded font-code text-sm",
+                                      "text-primary-foreground" 
                                     )}
                                     {...props}
                                   >
@@ -124,7 +121,7 @@ export function Conversation({ history, onNewChat }: ConversationProps) {
                               em: ({node, ...props}) => <em className="italic" {...props} />,
                             }}
                           >
-                            {messageContent}
+                            {entry.content}
                           </ReactMarkdown>
                         </div>
                       </div>
@@ -133,12 +130,12 @@ export function Conversation({ history, onNewChat }: ConversationProps) {
                       </span>
                     </div>
                   );
-                } else {
+                } else { // system messages
                   return (
-                     <div key={index} className="flex items-start space-x-3 justify-start">
-                        <div className="p-3 rounded-lg bg-card shadow max-w-[75%]">
-                          <pre className="whitespace-pre-wrap text-sm font-code text-muted-foreground">
-                            {messageContent}
+                     <div key={index} className="flex items-start justify-center">
+                        <div className="p-2 rounded-lg bg-secondary text-secondary-foreground shadow text-xs max-w-[75%]">
+                          <pre className="whitespace-pre-wrap font-body">
+                            {entry.content}
                           </pre>
                         </div>
                      </div>

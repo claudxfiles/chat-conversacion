@@ -1,7 +1,11 @@
+
 export type N8nFormData = {
   agentName?: string; // Made optional
   taskDescription: string; // This will be the user's message
   priority?: "low" | "medium" | "high"; // Made optional
+  fileDataUri?: string; // For sending file content as a data URI
+  fileName?: string; // Original name of the file
+  fileMimeType?: string; // Mime type of the file
   // Add any other fields you expect agents to send
   [key: string]: any; // Allow additional dynamic fields
 };
@@ -21,3 +25,4 @@ export type AiSuggestion = {
   description: string;
   category: "Optimization" | "Automation" | "Efficiency";
 };
+
