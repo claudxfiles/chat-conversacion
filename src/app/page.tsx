@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { sendDataToN8N } from "@/lib/actions";
 import { Header } from "@/components/layout/header";
-import { Send, Paperclip, XCircle } from "lucide-react";
+import { Send, Paperclip, XCircle, Loader2 } from "lucide-react";
 import type { N8nFormData } from "@/types";
 import Image from 'next/image';
 import { cn } from "@/lib/utils";
@@ -30,6 +30,15 @@ export default function HomePage() {
   const [selectedFilePreview, setSelectedFilePreview] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, []);
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -101,7 +110,9 @@ export default function HomePage() {
         setConversationHistory(prevHistory => [...prevHistory, {type: 'bot', content: "Error - Could not connect to the service."}]);
       }
       
-      inputRef.current?.focus(); 
+      if (inputRef.current) {
+        inputRef.current.focus();
+      }
     }
   };
 
@@ -109,12 +120,21 @@ export default function HomePage() {
     setConversationHistory([]);
     setMessage("");
     clearSelectedFile();
-    inputRef.current?.focus();
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
   };
 
-  useEffect(() => {
-    inputRef.current?.focus();
-  }, []);
+  if (!isClient) {
+    return (
+      <div className="h-screen w-screen bg-background flex flex-col">
+        <Header />
+        <main className="flex-grow flex flex-col p-0 sm:p-4 md:p-6 lg:p-8 overflow-hidden min-h-0 items-center justify-center">
+          <Loader2 className="h-10 w-10 animate-spin text-primary" />
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="h-screen w-screen bg-background flex flex-col">
