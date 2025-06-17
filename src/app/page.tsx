@@ -130,7 +130,7 @@ export default function HomePage() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 overflow-hidden">
                 {selectedFile?.type.startsWith("image/") ? (
-                  <Image src={selectedFilePreview} alt="Selected file preview" width={40} height={40} className="rounded object-cover flex-shrink-0" />
+                  <Image src={selectedFilePreview} alt="Selected file preview" width={40} height={40} className="rounded object-cover flex-shrink-0 border" />
                 ) : (
                   <Paperclip className="h-6 w-6 text-muted-foreground flex-shrink-0" />
                 )}
