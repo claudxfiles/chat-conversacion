@@ -46,7 +46,7 @@ export function Conversation({ history, onNewChat }: ConversationProps) {
           </CardDescription>
         </div>
         <Button variant="outline" size="icon" onClick={onNewChat} aria-label="Start new chat" className="h-8 w-8 sm:h-9 sm:w-9">
-          <RefreshCw size={16} smSize={18} />
+          <RefreshCw size={18} />
         </Button>
       </CardHeader>
       <CardContent className="flex-1 min-h-0 p-0">
@@ -71,8 +71,8 @@ export function Conversation({ history, onNewChat }: ConversationProps) {
                           {entry.content}
                         </pre>
                       </div>
-                       <span className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-full bg-primary-foreground text-primary flex-shrink-0 order-1 shadow">
-                        <User size={18} smSize={20} />
+                       <span className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-full bg-primary-foreground text-primary flex-shrink-0 shadow">
+                        <User size={20} />
                       </span>
                     </div>
                   );
@@ -80,7 +80,7 @@ export function Conversation({ history, onNewChat }: ConversationProps) {
                   return (
                     <div key={index} className="flex items-end justify-start space-x-2 sm:space-x-3">
                        <span className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-full bg-accent text-accent-foreground flex-shrink-0 shadow">
-                        <Bot size={18} smSize={20}/>
+                        <Bot size={20}/>
                       </span>
                       <div className="p-3 rounded-2xl rounded-bl-md bg-card text-card-foreground shadow-md max-w-[75%] sm:max-w-[70%]">
                         <div className="text-sm font-body">
